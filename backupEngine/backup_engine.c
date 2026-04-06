@@ -7,21 +7,21 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-//  Copia por Syscalls (Requisito de Rúbrica)
-// Implementación idéntica a la validada por QA
+//  Copia por Syscalls 
+
 int sys_smart_copy(const char *src, const char *dest) {
     int fd_src, fd_dest;
     ssize_t bytes;
     char buffer[BUFFER_SIZE];
     struct stat st;
 
-    // Validación de existencia
+    // Validación de existencia con la funcion stat que devulve los metadatos del archivo
     if (stat(src, &st) == -1) {
         perror("[ERROR] El archivo origen no existe");
         return -1;
     }
 
-    fd_src = open(src, O_RDONLY);
+    fd_src = open(src, O_RDONLY); // funciones que se realzan directamente con el kernel (open, write, etc)
     if (fd_src < 0) return -1;
 
     // Se crea el destino con los mismos permisos del original
@@ -41,18 +41,20 @@ int sys_smart_copy(const char *src, const char *dest) {
     return 0;
 }
 
-//  El Demonio (Enfocado solo en un archivo)
-void iniciar_demonio_archivo(const char *src, const char *dest, int segundos) {
-    pid_t pid = fork(); // Creación del proceso hijo
-    if (pid > 0) exit(0); // El padre termina para liberar la terminal
+
+void iniciar_proceso_segundo_plano(int cantidad, char *archivos_src[], char *archivos_dest[], int segundos) {
+    pid_t pid = fork(); // Creación del proceso hijo, crea una copia del programa en ese instante
+    if (pid > 0) exit(0); // El padre termina para liberar la terminal, esto produce que el hijo quede en segundo plano
     if (pid < 0) exit(1);
 
-    setsid(); // Independencia del proceso
+    setsid(); // Independencia del proceso, es decir independiente de la terminal si la cerramos sigue presente
     while (1) {
-        // Ejecuta la copia del archivo directamente
-        if (sys_smart_copy(src, dest) == 0) {
-            // Opcional: Podrías escribir en un log aquí
+        
+        // Ciclo que recorre la cantidad de archivos decidida por el usuario
+        for (int i = 0; i < cantidad; i++) {
+            sys_smart_copy(archivos_src[i], archivos_dest[i]);
         }
-        sleep(segundos); // Intervalo de espera
+        sleep(segundos); // Intervalo de espera, el usuario decide el tiempo en cual el programa es despierta y respalda el archivo
     }
 }
+
