@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-// SECCIÓN 1: Copia por Syscalls (Requisito de Rúbrica)
+//  Copia por Syscalls (Requisito de Rúbrica)
 // Implementación idéntica a la validada por QA
 int sys_smart_copy(const char *src, const char *dest) {
     int fd_src, fd_dest;
@@ -41,7 +41,7 @@ int sys_smart_copy(const char *src, const char *dest) {
     return 0;
 }
 
-// SECCIÓN 4: El Demonio (Enfocado solo en un archivo)
+//  El Demonio (Enfocado solo en un archivo)
 void iniciar_demonio_archivo(const char *src, const char *dest, int segundos) {
     pid_t pid = fork(); // Creación del proceso hijo
     if (pid > 0) exit(0); // El padre termina para liberar la terminal
