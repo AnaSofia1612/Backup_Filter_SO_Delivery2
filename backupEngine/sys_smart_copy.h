@@ -3,10 +3,10 @@
 
 #define BUFFER_SIZE 4096
 
-// Función núcleo: Copia binaria optimizada (Sección 1)
+// Función núcleo: Copia binaria 
 int sys_smart_copy(const char *src, const char *dest);
 
-// Función de monitoreo: Lógica del demonio para archivos (Sección 4)
+// Función de monitoreo: Lógica del demonio para archivos
 void iniciar_demonio_archivo(const char *src, const char *dest, int segundos);
 
 #endif
