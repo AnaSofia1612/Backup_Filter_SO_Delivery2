@@ -9,6 +9,6 @@ int sys_smart_copy(const char *src, const char *dest);
 
 // Función de monitoreo: Lógica del demonio para archivos, 
 //es decir es aquella que implementamos para que el proceso se realice en segundo plano
-void iniciar_demonio_archivo(const char *src, const char *dest, int segundos);
+void iniciar_proceso_segundo_plano(int cantidad, char *archivos_src[], char *archivos_dest[], int segundos);
 
 #endif
