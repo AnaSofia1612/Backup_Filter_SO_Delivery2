@@ -107,7 +107,7 @@ double medir_tiempo(void (*metodo)(const char*, const char*),
 
 int main() {
     printf("\n=============================================\n");
-    printf("   PRUEBA DE RENDIMIENTO — Rol 3 QA\n");
+    printf("   PRUEBA DE RENDIMIENTO — QA\n");
     printf("=============================================\n\n");
 
     long tamanos[]    = { 1024, 1024*1024, 1024*1024*100 };

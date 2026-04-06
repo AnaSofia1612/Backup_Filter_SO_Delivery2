@@ -43,7 +43,7 @@ void copiar_syscall(const char *src, const char *dest) {
 
 int main() {
     printf("\n=============================================\n");
-    printf("   PRUEBAS DE ROBUSTEZ — Rol 3 QA\n");
+    printf("   PRUEBAS DE ROBUSTEZ — QA\n");
     printf("=============================================\n\n");
 
     // TEST 1: archivo que no existe
