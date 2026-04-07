@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
+<<<<<<< HEAD
 #include <sys/stat.h>
 #include <string.h>
 
@@ -61,14 +62,19 @@ void run_backup_cycle(int *copiados, int *saltados) {
     }
 }
 
+=======
+>>>>>>> d726138c4112ed073b3b5c8b4737152c9e5ff5c0
 
 //  Copia por Syscalls 
 
 int sys_smart_copy(const char *src, const char *dest) {
+<<<<<<< HEAD
     if (!file_modified(src, dest)) {
         return 0;
     }
 
+=======
+>>>>>>> d726138c4112ed073b3b5c8b4737152c9e5ff5c0
     int fd_src, fd_dest;
     ssize_t bytes;
     char buffer[BUFFER_SIZE];
@@ -115,4 +121,9 @@ void iniciar_proceso_segundo_plano(int cantidad, char *archivos_src[], char *arc
         }
         sleep(segundos); // Intervalo de espera, el usuario decide el tiempo en cual el programa es despierta y respalda el archivo
     }
+<<<<<<< HEAD
 }
+=======
+}
+
+>>>>>>> d726138c4112ed073b3b5c8b4737152c9e5ff5c0

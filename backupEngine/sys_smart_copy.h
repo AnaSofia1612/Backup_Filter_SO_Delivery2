@@ -11,4 +11,8 @@ int sys_smart_copy(const char *src, const char *dest);
 //es decir es aquella que implementamos para que el proceso se realice en segundo plano
 void iniciar_proceso_segundo_plano(int cantidad, char *archivos_src[], char *archivos_dest[], int segundos);
 
+<<<<<<< HEAD
 #endif
+=======
+#endif
+>>>>>>> d726138c4112ed073b3b5c8b4737152c9e5ff5c0
