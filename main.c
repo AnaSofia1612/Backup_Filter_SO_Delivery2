@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 /*
  * main.c — Punto de entrada del sistema de backup inteligente
  * ─────────────────────────────────────────────────────────────────
@@ -182,11 +182,11 @@ int main(int argc, char *argv[]) {
     start_daemon(cwd);
     return 0;
 }
-=======
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sys_smart_copy.h"
+#include "backupEngine/sys_smart_copy.h"
 
 
 //funciones externas del QA performance
@@ -257,4 +257,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
->>>>>>> d726138c4112ed073b3b5c8b4737152c9e5ff5c0
+
