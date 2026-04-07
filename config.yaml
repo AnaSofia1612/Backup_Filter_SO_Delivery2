@@ -1,0 +1,14 @@
+# ─────────────────────────────────────────────────────────────────
+# config.yaml — Configuración del sistema de backup inteligente
+#
+# interval: segundos entre cada ciclo de backup
+# files:    lista de pares origen → destino
+# ─────────────────────────────────────────────────────────────────
+
+interval: 10
+
+files:
+  - source: prueba.txt
+    destination: copia.txt
+
+
