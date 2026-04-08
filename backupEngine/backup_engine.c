@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
-<<<<<<< HEAD
 #include <sys/stat.h>
 #include <string.h>
 
@@ -16,6 +15,7 @@ extern struct config_t {
     char destination[100][256];
     int  file_count;
     int  interval;
+    char method[16];   /* "syscall" o "fread" */
 } config;
 
 
@@ -30,100 +30,89 @@ int file_modified(const char *src, const char *dest) {
            (src_stat.st_size  != dest_stat.st_size);
 }
 
-void run_backup_cycle(int *copiados, int *saltados) {
-    *copiados = 0;
-    *saltados = 0;
-
-    for (int i = 0; i < config.file_count; i++) {
-        if (!file_modified(config.source[i], config.destination[i])) {
-            (*saltados)++;
-            continue;
-        }
-
-        int fd_src = open(config.source[i], O_RDONLY);
-        int fd_dest = open(config.destination[i], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-
-        if (fd_src < 0 || fd_dest < 0) {
-            perror("File error");
-            (*saltados)++;
-            continue;
-        }
-
-        char buffer[4096];
-        ssize_t bytes;
-
-        while ((bytes = read(fd_src, buffer, sizeof(buffer))) > 0) {
-            write(fd_dest, buffer, bytes);
-        }
-
-        close(fd_src);
-        close(fd_dest);
-        (*copiados)++;
-    }
-}
-
-=======
->>>>>>> d726138c4112ed073b3b5c8b4737152c9e5ff5c0
-
-//  Copia por Syscalls 
-
+/* ── Copia usando syscalls directas del kernel ───────────────────── */
 int sys_smart_copy(const char *src, const char *dest) {
-<<<<<<< HEAD
-    if (!file_modified(src, dest)) {
-        return 0;
-    }
+    if (!file_modified(src, dest)) return 0;
 
-=======
->>>>>>> d726138c4112ed073b3b5c8b4737152c9e5ff5c0
-    int fd_src, fd_dest;
-    ssize_t bytes;
-    char buffer[BUFFER_SIZE];
     struct stat st;
-
-    // Validación de existencia con la funcion stat que devulve los metadatos del archivo
     if (stat(src, &st) == -1) {
         perror("[ERROR] El archivo origen no existe");
         return -1;
     }
 
-    fd_src = open(src, O_RDONLY); // funciones que se realzan directamente con el kernel (open, write, etc)
-    if (fd_src < 0) return -1;
+    int fd_src = open(src, O_RDONLY);
+    if (fd_src < 0) { perror("[ERROR] open src"); return -1; }
 
-    // Se crea el destino con los mismos permisos del original
-    fd_dest = open(dest, O_WRONLY | O_CREAT | O_TRUNC, st.st_mode);
-    if (fd_dest < 0) { 
-        close(fd_src); 
-        return -1; 
-    }
+    int fd_dest = open(dest, O_WRONLY | O_CREAT | O_TRUNC, st.st_mode);
+    if (fd_dest < 0) { perror("[ERROR] open dest"); close(fd_src); return -1; }
 
-    // Transferencia usando el buffer de página (4KB)
+    char buffer[BUFFER_SIZE];
+    ssize_t bytes;
+
+    /* Cada read/write es una syscall — cruce usuario-kernel por llamada */
     while ((bytes = read(fd_src, buffer, BUFFER_SIZE)) > 0) {
-        if (write(fd_dest, buffer, bytes) != bytes) break;
+        if (write(fd_dest, buffer, bytes) != bytes) {
+            perror("[ERROR] write incompleto");
+            break;
+        }
     }
 
     close(fd_src);
     close(fd_dest);
-    return 0;
+    return 1;
 }
 
+/* ── Copia usando fread/fwrite (buffering en espacio de usuario) ──── *
+ *                                                                      *
+ * fread acumula datos en un buffer interno de la libc (por defecto    *
+ * 8KB). Para archivos pequeños que caben en ese buffer, todo se lee   *
+ * en una sola syscall real, reduciendo los cambios de contexto        *
+ * usuario-kernel. Con read() puro, cada llamada implica un cruce al   *
+ * kernel aunque el archivo tenga solo unos pocos bytes.               *
+ * ─────────────────────────────────────────────────────────────────── */
+int fread_copy(const char *src, const char *dest) {
+    if (!file_modified(src, dest)) return 0;
 
-void iniciar_proceso_segundo_plano(int cantidad, char *archivos_src[], char *archivos_dest[], int segundos) {
-    pid_t pid = fork(); // Creación del proceso hijo, crea una copia del programa en ese instante
-    if (pid > 0) exit(0); // El padre termina para liberar la terminal, esto produce que el hijo quede en segundo plano
-    if (pid < 0) exit(1);
+    FILE *fsrc = fopen(src, "rb");
+    if (!fsrc) { perror("[ERROR] fopen src"); return -1; }
 
-    setsid(); // Independencia del proceso, es decir independiente de la terminal si la cerramos sigue presente
-    while (1) {
-        
-        // Ciclo que recorre la cantidad de archivos decidida por el usuario
-        for (int i = 0; i < cantidad; i++) {
-            sys_smart_copy(archivos_src[i], archivos_dest[i]);
+    FILE *fdest = fopen(dest, "wb");
+    if (!fdest) { perror("[ERROR] fopen dest"); fclose(fsrc); return -1; }
+
+    char buffer[BUFFER_SIZE];
+    size_t bytes;
+
+    /* fread/fwrite usan buffer interno — menos syscalls para archivos pequeños */
+    while ((bytes = fread(buffer, 1, BUFFER_SIZE, fsrc)) > 0) {
+        if (fwrite(buffer, 1, bytes, fdest) != bytes) {
+            perror("[ERROR] fwrite incompleto");
+            break;
         }
-        sleep(segundos); // Intervalo de espera, el usuario decide el tiempo en cual el programa es despierta y respalda el archivo
     }
-<<<<<<< HEAD
-}
-=======
+
+    fclose(fsrc);
+    fclose(fdest);
+    return 1;
 }
 
->>>>>>> d726138c4112ed073b3b5c8b4737152c9e5ff5c0
+void run_backup_cycle(int *copiados, int *saltados) {
+    *copiados = 0;
+    *saltados = 0;
+
+    /* Seleccionar método según config.yaml */
+    int usar_fread = (strcmp(config.method, "fread") == 0);
+
+    for (int i = 0; i < config.file_count; i++) {
+        int resultado;
+
+        if (usar_fread)
+            resultado = fread_copy(config.source[i], config.destination[i]);
+        else
+            resultado = sys_smart_copy(config.source[i], config.destination[i]);
+
+        if (resultado == 1)
+            (*copiados)++;
+        else
+            (*saltados)++;
+    }
+}

@@ -7,8 +7,8 @@
 
 interval: 10
 
+method: fread   # opciones: syscall | fread
+
 files:
   - source: prueba.txt
     destination: copia.txt
-
-

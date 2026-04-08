@@ -43,6 +43,7 @@ struct config_t {
     char destination[MAX_FILES][MAX_PATH];
     int  file_count;
     int  interval;
+    char method[16];   /* "syscall" o "fread" */
 } config;
 
 /* Ruta del YAML activo (necesaria para recarga SIGHUP) */
@@ -69,6 +70,7 @@ static int parse_yaml_internal(const char *filename, struct config_t *cfg) {
 
     memset(cfg, 0, sizeof(struct config_t));
     cfg->interval = 3600;  /* valor por defecto */
+    strncpy(cfg->method, "syscall", sizeof(cfg->method) - 1); /* valor por defecto */
 
     char last_key[64] = "";
     int  is_key       = 1;
@@ -109,6 +111,9 @@ static int parse_yaml_internal(const char *filename, struct config_t *cfg) {
             } else {
                 if (strcmp(last_key, "interval") == 0) {
                     cfg->interval = atoi(val);
+
+                } else if (strcmp(last_key, "method") == 0) {
+                    strncpy(cfg->method, val, sizeof(cfg->method) - 1);
 
                 } else if (strcmp(last_key, "source") == 0 && in_files) {
                     if (cfg->file_count < MAX_FILES)
@@ -153,6 +158,7 @@ void parse_yaml(const char *filename) {
     }
 
     printf("[CONFIG] Intervalo : %d segundos\n", config.interval);
+    printf("[CONFIG] Metodo    : %s\n",          config.method);
     printf("[CONFIG] Archivos  : %d par(es)\n",  config.file_count);
     for (int i = 0; i < config.file_count; i++)
         printf("[CONFIG]   [%d] %s  →  %s\n",
