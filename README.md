@@ -190,3 +190,9 @@ Los cambios realizados en el repositorio **SistemaOperativo** para esta integrac
 | `include/commands.h`             | Se agregó el prototipo `void cmd_respaldo(char **args)`              |
 | `src/core/shell_loop.c`          | Se registró `"respaldo"` y `&cmd_respaldo` en las tablas de comandos |
 
+
+
+INTEGRANTES:
+MARIA LAURA TAFUR GOMEZ
+AAN SOFIA ANGARITA
+ORIANA VALOYES
